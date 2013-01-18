@@ -52,7 +52,7 @@
 #define CONFIG_CMD_ASKENV
 #define CONFIG_VERSION_VARIABLE
 
-#if !(defined(CONFIG_USB_SPL) && defined(CONFIG_SPL_BUILD))
+#if !defined(CONFIG_RESTORE_FLASH) && !defined(CONFIG_USB_SPL)
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"loadaddr=0x80200000\0" \
 	"kloadaddr=0x80007fc0\0" \
@@ -136,6 +136,7 @@
 		"run ramargs; " \
 		"bootm ${loadaddr}\0" \
     CONFIG_DFU_ALT
+#endif
 
 /* set to negative value for no autoboot */
 #define CONFIG_BOOTDELAY		3
@@ -162,9 +163,13 @@
 		"run nandboot;" \
 	"fi;" \
 
-#else
-#define CONFIG_BOOTDELAY		0
 
+#ifdef CONFIG_RESTORE_FLASH
+
+#undef CONFIG_BOOTDELAY
+#undef CONFIG_BOOTCOMMAND
+
+#define CONFIG_BOOTDELAY		0
 #define CONFIG_BOOTCOMMAND			\
 	"setenv autoload no; "			\
 	"dhcp; "				\
