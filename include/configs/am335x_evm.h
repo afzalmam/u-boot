@@ -170,13 +170,24 @@
 #undef CONFIG_BOOTCOMMAND
 
 #define CONFIG_BOOTDELAY		0
+#ifdef CONFIG_USB_SPL
 #define CONFIG_BOOTCOMMAND			\
 	"setenv autoload no; "			\
+	"setenv ethact usb_ether; "		\
 	"dhcp; "				\
 	"if tftp 80000000 debrick.scr; then "	\
 		"source 80000000; "		\
 	"fi"
-#endif
+#else
+#define CONFIG_BOOTCOMMAND			\
+	"setenv autoload no; "			\
+	"setenv ethact cpsw; "			\
+	"dhcp; "				\
+	"if tftp 80000000 debrick.scr; then "	\
+		"source 80000000; "		\
+	"fi"
+#endif /* #ifdef CONFIG_USB_SPL */
+#endif /* #ifdef CONFIG_RESTORE_FLASH */
 
 /* Clock Defines */
 #define V_OSCK				24000000  /* Clock output from T2 */
