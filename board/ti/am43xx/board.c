@@ -18,6 +18,7 @@
 
 #include <common.h>
 #include <errno.h>
+#include <spl.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/omap.h>
@@ -27,6 +28,11 @@ DECLARE_GLOBAL_DATA_PTR;
 
 void s_init(void)
 {
+#ifdef	CONFIG_SPL_BUILD
+	gd = &gdata;
+
+	preloader_console_init();
+#endif
 }
 
 int board_init(void)
