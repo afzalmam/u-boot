@@ -21,6 +21,7 @@
 #include <spl.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/hardware.h>
+#include <asm/arch/mux.h>
 #include <asm/arch/omap.h>
 #include <asm/io.h>
 
@@ -34,6 +35,19 @@ DECLARE_GLOBAL_DATA_PTR;
 static struct uart_sys *uart_base = (struct uart_sys *)DEFAULT_UART_BASE;
 #endif
 
+#ifdef	CONFIG_SPL_BUILD
+static struct module_pin_mux uart0_pin_mux[] = {
+	{OFFSET(uart0_rxd), (MODE(0) | RXACTIVE)},	/* UART0_RXD */
+	{OFFSET(uart0_txd), (MODE(0))},			/* UART0_TXD */
+	{-1},
+};
+
+void enable_uart0_pin_mux(void)
+{
+	configure_module_pin_mux(uart0_pin_mux);
+}
+#endif
+
 void s_init(void)
 {
 #ifdef	CONFIG_SPL_BUILD
@@ -41,6 +55,10 @@ void s_init(void)
 	u32 regVal;
 
 	clk_init();
+
+#ifdef CONFIG_SERIAL1
+	enable_uart0_pin_mux();
+#endif
 
 	regVal = readl(&uart_base->uartsyscfg);
 	regVal |= UART_RESET;
