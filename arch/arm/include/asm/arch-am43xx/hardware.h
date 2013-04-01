@@ -37,4 +37,7 @@
 /* UART */
 #define DEFAULT_UART_BASE		UART0_BASE
 
+#define	CM_WKUP				0x44DF2800
+#define	CM_PER				0x44DF8800
+
 #endif /* __AM43XX_HARDWARE_H */

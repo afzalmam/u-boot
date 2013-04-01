@@ -26,9 +26,34 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#ifdef CONFIG_SPL_BUILD
+#define UART_RESET		(0x1 << 1)
+#define UART_CLK_RUNNING_MASK	0x1
+#define UART_SMART_IDLE_EN	(0x1 << 0x3)
+
+static struct uart_sys *uart_base = (struct uart_sys *)DEFAULT_UART_BASE;
+#endif
+
 void s_init(void)
 {
 #ifdef	CONFIG_SPL_BUILD
+	/* UART softreset */
+	u32 regVal;
+
+	clk_init();
+
+	regVal = readl(&uart_base->uartsyscfg);
+	regVal |= UART_RESET;
+	writel(regVal, &uart_base->uartsyscfg);
+	while ((readl(&uart_base->uartsyssts) &
+		UART_CLK_RUNNING_MASK) != UART_CLK_RUNNING_MASK)
+		;
+
+	/* Disable smart idle */
+	regVal = readl(&uart_base->uartsyscfg);
+	regVal |= UART_SMART_IDLE_EN;
+	writel(regVal, &uart_base->uartsyscfg);
+
 	gd = &gdata;
 
 	preloader_console_init();

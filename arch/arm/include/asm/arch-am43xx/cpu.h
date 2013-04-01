@@ -98,6 +98,25 @@ struct ctrl_dev {
 	unsigned int resv4[4];
 	unsigned int miisel;		/* offset 0x50 */
 };
+
+/* Encapsulating cm wkup registers */
+struct cm_wkup {
+	unsigned int resv[210];
+	unsigned int wkup_uart0ctrl;	/* offset 0x348 */
+};
+
+/* Encapsulating cm per registers */
+struct cm_per {
+	unsigned int resv1[332];
+	unsigned int timer2clkctrl;	/* offset 0x530 */
+	unsigned int resv2[123];
+	unsigned int emifclkctrl;	/* offset 0x720 */
+	unsigned int resv3[3];
+	unsigned int emiffwclkctrl;	/* offset 0x730 */
+	unsigned int resv4[1];
+	unsigned int otfaemifclkctrl;	/* offset 0x738 */
+};
+
 #endif /* __ASSEMBLY__ */
 #endif /* __KERNEL_STRICT_NAMES */
 
