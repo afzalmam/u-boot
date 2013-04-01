@@ -21,6 +21,9 @@
 
 #include <asm/arch/omap.h>
 
+/* Control module base address */
+#define	CTRL_BASE			0x44E10000
+
 /* Module base addresses */
 #define UART0_BASE			0x44E09000
 
