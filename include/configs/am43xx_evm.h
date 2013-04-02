@@ -139,6 +139,8 @@
 #define CONFIG_SYS_SPL_MALLOC_START	0x80208000
 #define CONFIG_SYS_SPL_MALLOC_SIZE	0x100000
 
+#define CONFIG_SPL_RAM_DEVICE
+
 /* Unsupported features */
 #undef CONFIG_USE_IRQ
 

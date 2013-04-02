@@ -23,6 +23,7 @@
 #ifndef	_ASM_ARCH_SPL_H_
 #define	_ASM_SPL_H_
 
+#define BOOT_DEVICE_RAM 1
 #define BOOT_DEVICE_XIP       	2
 #define BOOT_DEVICE_NAND	5
 #define BOOT_DEVICE_MMC1	8
