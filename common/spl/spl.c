@@ -177,7 +177,11 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
 	spl_board_init();
 #endif
 
+#ifdef	CONFIG_AM43XX
+	boot_device = BOOT_DEVICE_RAM;
+#else
 	boot_device = spl_boot_device();
+#endif
 	debug("boot device - %d\n", boot_device);
 	switch (boot_device) {
 #ifdef CONFIG_SPL_RAM_DEVICE
