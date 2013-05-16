@@ -17,7 +17,9 @@ include $(TOPDIR)/config.mk
 LIB	= $(obj)lib$(SOC).o
 
 COBJS	+= board.o
+ifndef CONFIG_HAPS
 COBJS	+= clock.o
+endif
 COBJS	+= mux.o
 
 SRCS	:= $(COBJS:.o=.c)

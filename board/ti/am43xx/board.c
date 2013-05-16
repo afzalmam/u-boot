@@ -54,7 +54,9 @@ void s_init(void)
 	/* UART softreset */
 	u32 regVal;
 
+#ifndef CONFIG_HAPS
 	clk_init();
+#endif
 
 #ifdef CONFIG_SERIAL1
 	enable_uart0_pin_mux();
