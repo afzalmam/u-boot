@@ -64,14 +64,16 @@
 	"bootpart=0:2\0" \
 	"bootdir=/boot\0" \
 	"bootfile=zImage\0" \
-	"fdtfile=undefined\0" \
+	"fdtfile=am335x-boneblack.dtb\0" \
+	"fdtbase=am335x-boneblack\0" \
 	"console=ttyO0,115200n8\0" \
 	"optargs=\0" \
 	"dfu_alt_info_mmc=" DFU_ALT_INFO_MMC "\0" \
 	"dfu_alt_info_emmc=rawemmc mmc 0 3751936\0" \
 	"mmcdev=0\0" \
+	"mmcpart=1\0" \
 	"mmcroot=/dev/mmcblk0p2 ro\0" \
-	"mmcrootfstype=ext4 rootwait\0" \
+	"mmcrootfstype=ext4 rootwait fixrtc\0" \
 	"rootpath=/export/rootfs\0" \
 	"nfsopts=nolock\0" \
 	"static_ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}:${hostname}" \
@@ -97,7 +99,7 @@
 		"nfsroot=${serverip}:${rootpath},${nfsopts} rw " \
 		"ip=dhcp\0" \
 	"bootenv=uEnv.txt\0" \
-	"loadbootenv=load mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
+	"loadbootenv=load mmc ${mmcdev}:${mmcpart} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from mmc ...; " \
 		"env import -t $loadaddr $filesize\0" \
 	"dfu_alt_info_ram=" DFU_ALT_INFO_RAM "\0" \
@@ -107,36 +109,14 @@
 		"rootfstype=${ramrootfstype}\0" \
 	"loadramdisk=load mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
 	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
-	"mmcloados=run mmcargs; " \
-		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdtaddr}; " \
-			"else " \
-				"if test ${boot_fdt} = try; then " \
-					"bootz; " \
-				"else " \
-					"echo WARN: Cannot load the DT; " \
-				"fi; " \
-			"fi; " \
-		"else " \
-			"bootz; " \
-		"fi;\0" \
-	"mmcboot=mmc dev ${mmcdev}; " \
-		"if mmc rescan; then " \
-			"echo SD/MMC found on device ${mmcdev};" \
-			"if run loadbootenv; then " \
-				"echo Loaded environment from ${bootenv};" \
-				"run importbootenv;" \
-			"fi;" \
-			"if test -n $uenvcmd; then " \
-				"echo Running uenvcmd ...;" \
-				"run uenvcmd;" \
-			"fi;" \
-			"if run loadimage; then " \
-				"run mmcloados;" \
-			"fi;" \
-		"fi;\0" \
+	"loadzimage=load mmc ${mmcdev}:${mmcpart} ${loadaddr} zImage\0" \
+	"loadfdt=load mmc ${mmcdev}:${mmcpart} ${fdtaddr} /dtbs/${fdtfile}\0" \
+	"mmcboot=echo Booting from mmc ...; " \
+		"run mmcargs; " \
+		"bootz ${loadaddr} - ${fdtaddr}\0" \
+	"mmc_classic_boot=echo Booting from mmc ...; " \
+		"run mmcargs; " \
+		"bootz ${loadaddr}\0" \
 	"spiboot=echo Booting from spi ...; " \
 		"run spiargs; " \
 		"sf probe ${spibusno}:0; " \
@@ -154,9 +134,9 @@
 		"bootz ${loadaddr} ${rdaddr} ${fdtaddr}\0" \
 	"findfdt="\
 		"if test $board_name = A335BONE; then " \
-			"setenv fdtfile am335x-bone.dtb; fi; " \
+			"setenv fdtfile am335x-bone.dtb; setenv fdtbase am335x-bone; fi; " \
 		"if test $board_name = A335BNLT; then " \
-			"setenv fdtfile am335x-boneblack.dtb; fi; " \
+			"setenv fdtfile am335x-boneblack.dtb; setenv fdtbase am335x-boneblack; fi; " \
 		"if test $board_name = A33515BB; then " \
 			"setenv fdtfile am335x-evm.dtb; fi; " \
 		"if test $board_name = A335X_SK; then " \
@@ -167,12 +147,49 @@
 #endif
 
 #define CONFIG_BOOTCOMMAND \
+	"gpio set 53; " \
+	"i2c mw 0x24 1 0x3e; " \
 	"run findfdt; " \
-	"run mmcboot;" \
-	"setenv mmcdev 1; " \
-	"setenv bootpart 1:2; " \
-	"run mmcboot;" \
-	"run nandboot;"
+	"mmc dev 0; if mmc rescan ; then " \
+		"gpio set 54; " \
+		"setenv mmcdev 0; " \
+		"echo SD/MMC found on device ${mmcdev}; " \
+		"if run loadbootenv; then " \
+			"run importbootenv; " \
+		"fi; " \
+		"if test -n $cape; then " \
+			"setenv fdtfile $fdtbase-$cape.dtb; " \
+			"echo using: $fdtfile...; " \
+		"fi; " \
+		"gpio set 55; " \
+		"echo Checking if uenvcmd is set ...;" \
+		"if test -n $uenvcmd; then " \
+			"gpio set 56; " \
+			"echo Running uenvcmd ...; " \
+			"run uenvcmd;" \
+		"fi; " \
+		"echo; echo uenvcmd was not defined in uEnv.txt ...; echo trying eMMC (BeagleBone Black) ...; echo;" \
+	"fi;" \
+	"mmc dev 1; if mmc rescan ; then " \
+		"gpio set 54; " \
+		"setenv mmcdev 1; " \
+		"echo SD/MMC found on device ${mmcdev}; " \
+		"if run loadbootenv; then " \
+			"run importbootenv; " \
+		"fi; " \
+		"if test -n $cape; then " \
+			"setenv fdtfile $fdtbase-$cape.dtb; " \
+			"echo using: $fdtfile...; " \
+		"fi; " \
+		"gpio set 55; " \
+		"echo Checking if uenvcmd is set ...;" \
+		"if test -n $uenvcmd; then " \
+			"gpio set 56; " \
+			"echo Running uenvcmd ...; " \
+			"run uenvcmd;" \
+		"fi; " \
+		"echo; echo uenvcmd was not defined in uEnv.txt ...; echo halting ...; echo;" \
+	"fi;" \
 
 /* NS16550 Configuration */
 #define CONFIG_SYS_NS16550_COM1		0x44e09000	/* Base EVM has UART0 */
